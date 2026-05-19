@@ -1,0 +1,166 @@
+{
+  "name": "AI Email Automation Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "includeSpamTrash": "={{ false }}",
+          "labelIds": [
+            "INBOX"
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -80,
+        0
+      ],
+      "id": "47970829-e17e-47e6-af17-34e4fe517978",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "6ppDwu8OUPns3H7T",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "12d5f0cc-9521-42dc-8d66-6dab19bb2e01",
+              "name": "subject",
+              "value": "={{ $json.snippet }}",
+              "type": "string"
+            },
+            {
+              "id": "170507d6-74ed-476f-947b-a99552ba4208",
+              "name": "body",
+              "value": "={{ $json.snippet }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        128,
+        0
+      ],
+      "id": "70ca1915-119e-4456-899b-6e6bd68662c8",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are a professional AI email assistant.\n\nRead the email carefully and:\n1. Identify the category of the email.\n2. Generate a short, natural, professional reply.\n3. Do not use placeholders like [Your Name] or [Sender Name].\n4. Keep the response concise and human-like.\n\nEmail:\n{{ $json.snippet }}\n\nReply format:\n\nCategory: [category]\n\nReply:\n[your professional response]"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        160,
+        144
+      ],
+      "id": "5d208835-226c-4333-848f-3d744ec35091",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "5s5mbEGZOvP7lIEI",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $node[\"Gmail Trigger\"].json.headers.from.match(/<(.+?)>/)[1] }}",
+        "subject": "AI Auto Reply Test",
+        "emailType": "text",
+        "message": "={{ $json.output[0].content[0].text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        384,
+        144
+      ],
+      "id": "41c389e2-fb8b-4b6c-8370-14084e29c246",
+      "name": "Send a message",
+      "webhookId": "d7715e14-35fe-4e4f-a809-37cf932bb2e5",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "6ppDwu8OUPns3H7T",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "ec8090d9-853d-4790-bddc-59a909314b7c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a4b53a2134221b228fa2d0e57074d60738daa7406aaa4ede90c5d516e37c9b48"
+  },
+  "id": "927lSazYeMOEqDBu",
+  "tags": []
+}
